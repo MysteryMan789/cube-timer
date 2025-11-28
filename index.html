@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Stopwatch Timer</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background: #f3f4f7;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                color: #333;
+            }
+            button {
+                background-color: #4CAF50;
+                border: none;
+                padding: 12px 22px;
+                color: white;
+                font-size: 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                margin: 10px;
+            }
+            button:hover { background-color: #45a049; }
+            #seconds {
+                font-size: 30px;
+                font-weight: bold;
+                color: #2b7cff;
+            }
+            #scramble {
+                margin-top: 15px;
+                font-size: 18px;
+                max-width: 90%;
+                text-align: center;
+            }
+            .select-wrapper { width: 220px; }
+            select {
+                position: absolute;
+                right: 20px;
+                padding: 12px 16px;
+                font-size: 15px;
+            }
+            #get-scramble {
+                position: absolute;
+                right: 20px;
+                top: 120px;
+            }
+        </style>
+    </head>
+    
+    <body>
+    
+        <div class="select-wrapper">
+            <select id="cube-size-select">
+                <option>Select cube size</option>
+                <option>2x2</option>
+                <option>3x3</option>
+                <option>4x4</option>
+                <option>5x5</option>
+                <option>6x6</option>
+                <option>7x7</option>
+            </select>
+        </div>
+        
+        <button id="get-scramble">Get Scramble</button>
+        <button id="start-button">Start</button>
+        <button id="stop-button">Stop</button>
+        <button id="reset-button">Reset</button>
+        
+        <div id="scramble"></div>
+        <p><span id="seconds">0</span></p>
+        
+        <script>
+            const seconds = document.getElementById("seconds");
+            const scrambleDiv = document.getElementById("scramble");
+        
+            let startTime = 0;
+            let intervalId = null;
+        
+            function getScramble(size) {
+                const cubeSize = parseInt(size);
+                const baseMoves = [
+                    "R","R'","R2","L","L'","L2","U","U'","U2",
+                    "D","D'","D2","F","F'","F2","B","B'","B2"
+                ];
+                const wideFaces = ["R", "L", "U", "D", "F", "B"];
+                const suffix = ["", "'", "2"];
+                const moves = [...baseMoves];
+        
+                if (cubeSize > 3) {
+                    wideFaces.forEach(face => {
+                        suffix.forEach(s => moves.push(face + "w" + s));
+                    });
+                }
+        
+                if (cubeSize > 5) {
+                    wideFaces.forEach(face => {
+                        suffix.forEach(s => moves.push("3" + face + "w" + s));
+                    });
+                }
+        
+                const lengths = {
+                    "2x2": 10, "3x3": 25, "4x4": 40,
+                    "5x5": 60, "6x6": 80, "7x7": 100
+                };
+                const scrambleLength = lengths[size] || 25;
+        
+                const scramble = [];
+                let lastFace = "";
+        
+                for (let i = 0; i < scrambleLength; i++) {
+                    let move;
+                    do {
+                        move = moves[Math.floor(Math.random() * moves.length)];
+                    } while (move[0] === lastFace);
+        
+                    scramble.push(move);
+                    lastFace = move[0];
+                }
+        
+                return scramble.join(" ");
+            }
+        
+            function updateTimer() {
+                const elapsed = (Date.now() - startTime) / 1000;
+                seconds.textContent = elapsed.toFixed(2);
+            }
+        
+            function startTimer() {
+                if (!intervalId) {
+                    startTime = Date.now() - parseFloat(seconds.textContent) * 1000;
+                    intervalId = setInterval(updateTimer, 10);
+                }
+            }
+        
+            function stopTimer() {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        
+            function resetTimer() {
+                stopTimer();
+                seconds.textContent = "0";
+            }
+        
+            document.getElementById("get-scramble").onclick = () => {
+                const size = document.getElementById("cube-size-select").value;
+                if (size === "Select cube size") {
+                    alert("Select a size!");
+                    return;
+                }
+                scrambleDiv.textContent = getScramble(size);
+            };
+        
+            document.getElementById("start-button").onclick = startTimer;
+            document.getElementById("stop-button").onclick = stopTimer;
+            document.getElementById("reset-button").onclick = resetTimer;
+        
+            document.addEventListener("keydown", e => {
+                if (e.code === "Space") {
+                    e.preventDefault();
+                    intervalId ? stopTimer() : startTimer();
+                }
+            });
+        
+            document.addEventListener("keydown", e => {
+                if (e.key.toLowerCase() === "r") {
+                    resetTimer();
+                }
+            });
+        </script>
+    
+    </body>
+</html>
